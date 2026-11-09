@@ -52,7 +52,7 @@ const ItemDetailsPage = () => {
             alt={item?.name}
             width='100%'
             height='100%'
-            src={`http://localhost:1337${item?.attributes?.image?.data?.attributes?.formats?.medium?.url}`}
+            src={(() => { const url = item?.attributes?.image?.data?.attributes?.formats?.medium?.url; return url?.startsWith("http") ? url : `http://localhost:1337${url || ""}`; })()}
             style={{ objectFit: 'contain'}}
           />
         </Box>
