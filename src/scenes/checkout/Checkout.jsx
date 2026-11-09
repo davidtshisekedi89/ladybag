@@ -129,8 +129,13 @@ const Checkout = () => {
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(requestBody)
     });
-    if (!response.ok) {\n      const details = await response.text();\n      throw new Error(`Checkout failed (${response.status}): ${details}`);\n    }\n    const session = await response.json();
-    if (!stripe) throw new Error("Stripe could not be loaded");\n    await stripe.redirectToCheckout({
+    if (!response.ok) {
+      const details = await response.text();
+      throw new Error(`Checkout failed (${response.status}): ${details}`);
+    }
+    const session = await response.json();
+    if (!stripe) throw new Error("Stripe could not be loaded");
+    await stripe.redirectToCheckout({
       sessionId: session.id
     })
   }//pour le payment stripe
