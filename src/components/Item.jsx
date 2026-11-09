@@ -41,7 +41,7 @@ const Item = ({item, width}) => {                  // item comes from backend
             alt={item.name}
             width="300px"
             height="400px"
-            src={`http://localhost:1337${url}`}
+            src={url?.startsWith("http") ? url : `http://localhost:1337${url}`}
             onClick={() => navigate(`/item/${item.id}`)}
             style={{ cursor: 'pointer'}}
             />
