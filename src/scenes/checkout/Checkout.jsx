@@ -95,7 +95,7 @@ const Checkout = () => {
   const isSecondStep = activeStep === 1;
 
   const handleFormSubmit = async (values, actions) => {
-    setActiveStep(activeStep + 1);
+    if (isFirstStep) setActiveStep(1);
 
     // copies the billing address onto shipping address
     if (isFirstStep && values.shippingAddress.isSameAddress){
@@ -106,7 +106,7 @@ const Checkout = () => {
     }
 
     if(isSecondStep){
-        makePayement(values);
+        await makePayement(values);
     }
 
     actions.setTouched({});
@@ -116,7 +116,7 @@ const Checkout = () => {
   async function makePayement(values) {
     const stripe = await stripePromise;
     const requestBody = {
-      userName : [values.firstname, values.lastName].join(" "),
+      userName : [values.billingAddress.firstName, values.billingAddress.lastName].join(" "),
       email: values.email,
       products: cart.map(({ id, count}) => ({
         id,
@@ -129,8 +129,8 @@ const Checkout = () => {
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(requestBody)
     });
-    const session = await response.json();
-    await stripe.redirectToCheckout({
+    if (!response.ok) {\n      const details = await response.text();\n      throw new Error(`Checkout failed (${response.status}): ${details}`);\n    }\n    const session = await response.json();
+    if (!stripe) throw new Error("Stripe could not be loaded");\n    await stripe.redirectToCheckout({
       sessionId: session.id
     })
   }//pour le payment stripe
