@@ -67,7 +67,7 @@ const CartMenu = () => {
                                     width="123px"
                                     height="164px"
                                     // strapi formating
-                                    src={`http://localhost:1337${item?.attributes?.image?.data?.attributes?.formats?.medium?.url}`}/>  
+                                    src={(() => { const url = item?.attributes?.image?.data?.attributes?.formats?.medium?.url; return url?.startsWith("http") ? url : `http://localhost:1337${url || ""}`; })()}/>  
                                 </Box>
                                 <Box flex="1 1 60%">
                                     {/* Item Name */}
