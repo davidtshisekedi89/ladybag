@@ -1,98 +1,131 @@
-# Ladybag — React E-commerce Frontend
+# Ladybag — React + Spring Boot E-commerce Demo
 
-A portfolio e-commerce storefront built with **React 18**, **Redux Toolkit**, **Material UI**, **Formik**, and **Yup**. It demonstrates product browsing, cart state management, and a multi-step checkout interface.
+A full-stack portfolio storefront with a **React 18 / Redux Toolkit** frontend and a **Java 17 / Spring Boot** REST backend.
 
-> **Project status:** Frontend prototype. The application expects a separate Strapi-compatible backend on `http://localhost:1337`, which is **not included in this repository**. Payment processing and completed orders are not verified end to end.
+**Status:** Local development demo. The backend includes an in-memory H2 database seeded with four sample bags and an optional **Stripe test-mode** checkout integration. This is **not a production commerce system**; payments and order fulfillment have not been end-to-end verified.
 
 ## Features
 
-- Product browsing and item-detail routes
-- Shopping cart with quantity adjustments and subtotal calculation
+- Browse seeded products and view item details
+- Add products to a Redux shopping cart and change quantities
 - Billing, shipping, and contact forms
-- Form validation with Formik and Yup
-- Stripe Checkout client-side integration (requires a functioning backend)
-- Responsive UI components using Material UI
-
-## Tech stack
-
-React, React Router, Redux Toolkit, Material UI, Emotion, Formik, Yup, Stripe.js, Create React App.
+- Java REST API returning the product/image shape expected by the existing frontend
+- Server-side product-price lookup for Stripe test Checkout session creation
+- H2 database for easy local setup
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Browser[React storefront] --> Redux[Redux cart state]
-    Browser --> API[Strapi-compatible API at localhost:1337]
-    Browser --> Checkout[Checkout forms]
-    Checkout --> API
-    API -. creates session .-> Stripe[Stripe Checkout]
+  Browser[React storefront :3000] --> API[Spring Boot REST API :1337]
+  Browser --> Redux[Redux cart]
+  API --> JPA[Spring Data JPA]
+  JPA --> H2[(H2 in-memory DB)]
+  API -. test checkout session .-> Stripe[Stripe test API]
 ```
 
-## Getting started
+## Requirements
 
-1. Install **Node.js** and npm.
-2. Clone this repository and install dependencies:
+- Node.js and npm
+- JDK 17
+- Maven 3.9+ (for the backend)
+- Optional: Stripe **test** secret key, for checkout only
 
-   ```bash
-   git clone https://github.com/davidtshisekedi89/ladybag.git
-   cd ladybag
-   npm ci
-   ```
+## Run locally
 
-3. Start a compatible backend on `http://localhost:1337`. The frontend expects product and image data from that service. Backend setup, seed data, and Stripe server integration are not provided here.
-4. Run:
+**Terminal 1 — backend:**
 
-   ```bash
-   npm start
-   ```
+```bash
+cd backend
+mvn spring-boot:run
+```
 
-5. Open `http://localhost:3000`.
+Backend: `http://localhost:1337`. Product data is seeded automatically on each start; the H2 database is in-memory and resets when the server stops.
 
-Without the backend, catalog images, product data, and checkout requests may fail.
+**Terminal 2 — frontend (from repository root):**
 
-## Routes
+```bash
+npm ci
+npm start
+```
 
-| Route | Description |
-| --- | --- |
-| `/` | Storefront and product catalog |
-| `/item/:itemId` | Product details |
-| `/checkout` | Multi-step checkout form |
-| `/checkout/succes` | Confirmation screen (the route spelling is currently `succes`) |
+Frontend: `http://localhost:3000`.
 
-## Backend integration
+## REST API
 
-The frontend expects a product API compatible with its Strapi data structures and a checkout-session endpoint:
+### List products
 
-```http
-POST http://localhost:1337/api/orders
-Content-Type: application/json
+```bash
+curl "http://localhost:1337/api/items?populate=image"
+```
 
+Response uses the Strapi-like structure required by the existing React components:
+
+```json
 {
-  "userName": "Example Customer",
-  "email": "customer@example.com",
-  "products": [{ "id": 1, "count": 2 }]
+  "data": [
+    {
+      "id": 1,
+      "attributes": {
+        "name": "Classic Shoulder Bag",
+        "category": "bestSellers",
+        "price": 89.00,
+        "shortDescription": "Everyday shoulder bag",
+        "longDescription": "A classic bag for everyday use.",
+        "image": { "data": { "attributes": { "formats": { "medium": { "url": "https://raw.githubusercontent.com/..." } } } } }
+      }
+    }
+  ]
 }
 ```
 
-The checkout code expects a JSON response containing a Stripe Checkout `id`. This is a **frontend integration contract**, not proof that the backend endpoint is deployed or functional.
+### Get one product
 
-## Testing and build
+```bash
+curl "http://localhost:1337/api/items/1?populate=image"
+```
+
+### Create a Stripe test checkout session
+
+The backend requires `STRIPE_SECRET_KEY` set to a Stripe **test** secret key (`sk_test_...`). **Never commit the secret key.** The backend calculates prices from its own product catalog rather than trusting frontend prices.
+
+```bash
+curl -X POST http://localhost:1337/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"userName":"Demo Customer","email":"demo@example.com","products":[{"id":1,"count":2}]}'
+```
+
+With a valid Stripe test configuration, the response contains a session `id` used by Stripe.js. Without it, checkout returns HTTP 503; browsing still works. Set `FRONTEND_URL` if the frontend is not at `http://localhost:3000`.
+
+The React frontend currently uses a Stripe **publishable test key** in `src/scenes/checkout/Checkout.jsx`. Replace it with your own matching test account key when configuring Stripe. The confirmation screen intentionally does **not** claim payment success: production order confirmation requires server-side session verification or webhooks.
+
+## Tests
+
+Backend:
+
+```bash
+cd backend
+mvn test
+```
+
+Frontend:
 
 ```bash
 npm test
 npm run build
 ```
 
-The repository does not currently include dedicated component or checkout tests. Build and runtime behavior have not been independently verified.
+The backend includes catalog endpoint integration tests. The complete frontend/backend/Stripe flow has not been run or verified in this update.
 
-## Recommended next steps
+## Known limitations and next steps
 
-1. Provide a backend repository, sample product data, and environment-based API configuration.
-2. Fix the `homepage` setting in `package.json` before deploying to GitHub Pages.
-3. Verify Stripe checkout server-side before displaying a successful order confirmation.
-4. Fix the checkout route spelling and validate shipping/email fields.
-5. Add cart and checkout tests, screenshots, and a working demo link once available.
+- H2 data is ephemeral; migrate to PostgreSQL for persistent product and order records.
+- Add authenticated admin product management, inventory, order persistence, and Stripe webhooks.
+- Configure API and Stripe publishable keys through frontend environment variables.
+- Improve checkout error display and validation, and test the complete payment flow.
+- Fix the frontend `homepage` deployment URL and add automated frontend tests.
+- Add screenshots and a live demo once deployed.
 
 ## Source
 
-[GitHub repository](https://github.com/davidtshisekedi89/ladybag)
+[Ladybag on GitHub](https://github.com/davidtshisekedi89/ladybag)
