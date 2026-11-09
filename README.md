@@ -1,70 +1,98 @@
-# Getting Started with Create React App
+# Ladybag — React E-commerce Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A portfolio e-commerce storefront built with **React 18**, **Redux Toolkit**, **Material UI**, **Formik**, and **Yup**. It demonstrates product browsing, cart state management, and a multi-step checkout interface.
 
-## Available Scripts
+> **Project status:** Frontend prototype. The application expects a separate Strapi-compatible backend on `http://localhost:1337`, which is **not included in this repository**. Payment processing and completed orders are not verified end to end.
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+- Product browsing and item-detail routes
+- Shopping cart with quantity adjustments and subtotal calculation
+- Billing, shipping, and contact forms
+- Form validation with Formik and Yup
+- Stripe Checkout client-side integration (requires a functioning backend)
+- Responsive UI components using Material UI
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Tech stack
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+React, React Router, Redux Toolkit, Material UI, Emotion, Formik, Yup, Stripe.js, Create React App.
 
-### `npm test`
+## Architecture
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```mermaid
+flowchart LR
+    Browser[React storefront] --> Redux[Redux cart state]
+    Browser --> API[Strapi-compatible API at localhost:1337]
+    Browser --> Checkout[Checkout forms]
+    Checkout --> API
+    API -. creates session .-> Stripe[Stripe Checkout]
+```
 
-### `npm run build`
+## Getting started
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Install **Node.js** and npm.
+2. Clone this repository and install dependencies:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+   ```bash
+   git clone https://github.com/davidtshisekedi89/ladybag.git
+   cd ladybag
+   npm ci
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Start a compatible backend on `http://localhost:1337`. The frontend expects product and image data from that service. Backend setup, seed data, and Stripe server integration are not provided here.
+4. Run:
 
-### `npm run eject`
+   ```bash
+   npm start
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+5. Open `http://localhost:3000`.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Without the backend, catalog images, product data, and checkout requests may fail.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Routes
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+| Route | Description |
+| --- | --- |
+| `/` | Storefront and product catalog |
+| `/item/:itemId` | Product details |
+| `/checkout` | Multi-step checkout form |
+| `/checkout/succes` | Confirmation screen (the route spelling is currently `succes`) |
 
-## Learn More
+## Backend integration
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+The frontend expects a product API compatible with its Strapi data structures and a checkout-session endpoint:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```http
+POST http://localhost:1337/api/orders
+Content-Type: application/json
 
-### Code Splitting
+{
+  "userName": "Example Customer",
+  "email": "customer@example.com",
+  "products": [{ "id": 1, "count": 2 }]
+}
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+The checkout code expects a JSON response containing a Stripe Checkout `id`. This is a **frontend integration contract**, not proof that the backend endpoint is deployed or functional.
 
-### Analyzing the Bundle Size
+## Testing and build
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+npm test
+npm run build
+```
 
-### Making a Progressive Web App
+The repository does not currently include dedicated component or checkout tests. Build and runtime behavior have not been independently verified.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Recommended next steps
 
-### Advanced Configuration
+1. Provide a backend repository, sample product data, and environment-based API configuration.
+2. Fix the `homepage` setting in `package.json` before deploying to GitHub Pages.
+3. Verify Stripe checkout server-side before displaying a successful order confirmation.
+4. Fix the checkout route spelling and validate shipping/email fields.
+5. Add cart and checkout tests, screenshots, and a working demo link once available.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Source
 
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+[GitHub repository](https://github.com/davidtshisekedi89/ladybag)
